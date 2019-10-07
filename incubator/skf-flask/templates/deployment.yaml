@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "skf-flask.fullname" . }}
+  labels:
+{{ include "skf-flask.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "skf-flask.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "skf-flask.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      {{if .Values.dbVolumeClaim }}
+      initContainers:
+        - name: persist-db
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          command:
+            - '/bin/bash'
+            - '-c'
+            - "if [ ! -f /skf-flask-db/db.sqlite ]; then 
+                cp /skf-flask/skf/db/db.sqlite /skf-flask-db/db.sqlite;
+              fi; 
+              exit 0"
+          volumeMounts:
+          - mountPath: /skf-flask-db
+            name: db-volume
+      {{end}}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          env:
+          {{- with .Values.env }}
+{{ toYaml . | indent 12 }}
+          {{- end}}
+          {{if .Values.dbVolumeClaim }}
+          volumeMounts:
+            - mountPath: /skf-flask/skf/db/db.sqlite
+              subPath: db.sqlite
+              name: db-volume
+          {{end}}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{if .Values.dbVolumeClaim }}
+      volumes:
+        - name: db-volume
+              persistentVolumeClaim:
+                claimName: {{ .Values.dbVolumeClaim }}
+      {{end}}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

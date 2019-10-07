@@ -1,0 +1,64 @@
+# Default values for skf-flask.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: blabla1337/skf-flask
+  tag: stable
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+env:
+  - name: JWT_SECRET
+    value: "not_really_secret_as_you_can_read_this"
+  - name: HTTPS
+    value: "false"
+  - name: ORIGIN
+    value: skf-flask.local
+
+dbVolumeClaim:  ""
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  annotations: {}
+    # NGINX way
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+    # Traefik way
+    # kubernetes.io/ingress.class: traefik
+    # external-dns.alpha.kubernetes.io/target: "traefik.local"
+  hosts: []
+    #- host: skf-flask.local
+    #  paths: []
+
+  tls: []
+  #  - secretName: skf-flask-tls
+  #    hosts:
+  #      - skf-flask.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

@@ -15,7 +15,7 @@ fullnameOverride: ""
 
 env:
   - name: JWT_SECRET
-    value: "not_really_secret_as_you_can_read_this"
+    value: "change_this_super_secret_random_string"
   - name: HTTPS
     value: "false"
   - name: ORIGIN
